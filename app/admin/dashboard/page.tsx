@@ -7,6 +7,12 @@ import { urlFor } from "@/sanity/lib/image";
 import Swal from "sweetalert2";
 import ProtectedRoute from "../../component/ProtectedRoute";
 
+interface Product {
+  name: string;
+  image: string;
+  quantity: number;
+}
+
 interface Order {
   _id: string;
   customerName: string;
@@ -18,17 +24,17 @@ interface Order {
   discount: number;
   orderDate: string;
   status: string;
-  products: {name: string; image: string, quantity:number }[];
+  products: Product[];
 }
 
 export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState<string>("All");
 
   useEffect(() => {
     client
-      .fetch(
+      .fetch<Order[]>(
         `*[_type == "order"]{
           _id,
           customerName,
@@ -40,14 +46,13 @@ export default function AdminDashboard() {
           discount,
           orderDate,
           status,
-          products[],
+          products
       }`
       )
       .then((data) => {
-        const formattedOrders = data.map((order: any) => ({
+        const formattedOrders: Order[] = data.map((order) => ({
           ...order,
           status: order.status || "pending",
-          cartItems: order.cartItems || [],
         }));
         setOrders(formattedOrders);
       })
@@ -159,7 +164,7 @@ export default function AdminDashboard() {
                           >
                             <option value="pending">Pending</option>
                             <option value="shipped">Shipped</option>
-                            <option value="delivered">Deliverd</option>
+                            <option value="delivered">Delivered</option>
                           </select>
                         </td>
                         <td className="px-6 py-4">
@@ -183,8 +188,8 @@ export default function AdminDashboard() {
                             <ul>
                               {order.products.map((item, index) => (
                                 <li key={`${order._id}-${index}`} className="flex items-center gap-2">
-                                 Name:  {item.name} <br />
-                                 Quantity:  {item.quantity} <br/>
+                                  Name: {item.name} <br />
+                                  Quantity: {item.quantity} <br />
                                   {item.image && (
                                     <Image
                                       src={urlFor(item.image).url()}
